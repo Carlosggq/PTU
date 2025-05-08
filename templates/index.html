@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cuenta Regresiva</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container" id="main-container">
+        <h1>⏳ Página que te avisa si ya cayerón las utilidades</h1>
+        <div id="countdown"></div>
+    </div>
+
+    <div id="final-message" class="hidden">🎉 ¡YA CAYERÓN! 🎉</div>
+    <canvas id="fireworks"></canvas>
+
+    <script>
+        const targetDate = new Date("May 7, 2025 18:22:00 GMT-6").getTime();
+        const countdown = document.getElementById("countdown");
+        const finalMessage = document.getElementById("final-message");
+        const mainContainer = document.getElementById("main-container");
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const difference = targetDate - now;
+
+            if (difference <= 0) {
+                clearInterval(interval);
+                countdown.innerHTML = "";
+                finalMessage.classList.remove("hidden");
+                finalMessage.classList.add("show");
+
+                document.body.classList.add("celebration");
+                mainContainer.style.display = "none";
+                launchFireworks();
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            countdown.innerHTML = `${days} días, ${hours} horas, ${minutes} minutos, ${seconds} segundos`;
+        }, 1000);
+
+        function launchFireworks() {
+            const canvas = document.getElementById('fireworks');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+
+            function createParticleBurst(x, y) {
+                const count = 80;
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        radius: Math.random() * 3 + 1,
+                        color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+                        angle: Math.random() * 2 * Math.PI,
+                        speed: Math.random() * 4 + 1,
+                        alpha: 1
+                    });
+                }
+            }
+
+            function randomBurst() {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height / 2;
+                createParticleBurst(x, y);
+            }
+
+            function updateParticles() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += Math.cos(p.angle) * p.speed;
+                    p.y += Math.sin(p.angle) * p.speed;
+                    p.alpha -= 0.015;
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color.replace("hsl", "hsla").replace(")", `,${p.alpha})`);
+                    ctx.fill();
+                }
+            }
+
+            function animate() {
+                updateParticles();
+                if (Math.random() < 0.1) randomBurst();
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+    </script>
+</body>
+</html>
